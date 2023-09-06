@@ -18,6 +18,9 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "stm32l475e_iot01.h"
+#include "stm32l475e_iot01_tsensor.h"
+#include <math.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -54,6 +57,12 @@ UART_HandleTypeDef huart3;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
+
+float temp_value = 0;  // Measured temperature value
+char str_tmp[100] = ""; // Formatted message to display the temperature value
+uint8_t msg1[] = "****** Temperature values measurement ******\n\n\r";
+uint8_t msg2[] = "=====> Initialize Temperature sensor HTS221 \r\n";
+uint8_t msg3[] = "=====> Temperature sensor HTS221 initialized \r\n ";
 
 /* USER CODE END PV */
 
@@ -113,7 +122,16 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   /* USER CODE BEGIN 2 */
 
+  HAL_UART_Transmit(&huart1,msg1,sizeof(msg1),1000);
+  HAL_UART_Transmit(&huart1,msg2,sizeof(msg2),1000);
+  BSP_TSENSOR_Init();
+  HAL_UART_Transmit(&huart1,msg3,sizeof(msg3),1000);
+
   /* USER CODE END 2 */
+
+  uint8_t Test[] = "Hello World !!!\r\n"; //Data to send
+  HAL_UART_Transmit(&huart1,Test,sizeof(Test),10);// Sending in normal mode
+  HAL_Delay(1000);
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -124,9 +142,13 @@ int main(void)
 	  HAL_GPIO_TogglePin (GPIOB, GPIO_PIN_14);
 	  HAL_Delay (100);
 
-	  uint8_t Test[] = "Hello World !!!\r\n"; //Data to send
-	  HAL_UART_Transmit(&huart1,Test,sizeof(Test),10);// Sending in normal mode
-	  HAL_Delay(100);
+	  temp_value = BSP_TSENSOR_ReadTemp();
+	  int tmpInt1 = temp_value;
+	  float tmpFrac = temp_value - tmpInt1;
+	  int tmpInt2 = trunc(tmpFrac * 100);
+	  snprintf(str_tmp,100," TEMPERATURE = %d.%02d\n\r", tmpInt1, tmpInt2);
+	  HAL_UART_Transmit(&huart1,( uint8_t *)str_tmp,sizeof(str_tmp),1000);
+	  HAL_Delay(400);
 
     /* USER CODE BEGIN 3 */
   }
@@ -247,7 +269,7 @@ static void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x10909CEC;
+  hi2c2.Init.Timing = 0x00000E14;
   hi2c2.Init.OwnAddress1 = 0;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -482,11 +504,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, ARD_D10_Pin|SPBTLE_RF_RST_Pin|ARD_D9_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, ARD_D8_Pin|ISM43362_BOOT0_Pin|ISM43362_WAKEUP_Pin|SPSGRF_915_SDN_Pin
-                          |ARD_D5_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LED2_Pin|SPSGRF_915_SPI3_CSN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, ARD_D8_Pin|ISM43362_BOOT0_Pin|ISM43362_WAKEUP_Pin|LED2_Pin
+                          |SPSGRF_915_SDN_Pin|ARD_D5_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, USB_OTG_FS_PWR_EN_Pin|PMOD_RESET_Pin|STSAFE_A100_RESET_Pin, GPIO_PIN_RESET);
@@ -496,6 +515,9 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, VL53L0X_XSHUT_Pin|LED3_WIFI__LED4_BLE_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SPSGRF_915_SPI3_CSN_GPIO_Port, SPSGRF_915_SPI3_CSN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(ISM43362_SPI3_CSN_GPIO_Port, ISM43362_SPI3_CSN_Pin, GPIO_PIN_SET);
