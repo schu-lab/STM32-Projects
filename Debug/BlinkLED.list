@@ -413,7 +413,7 @@ int main(void)
  8000500:	f44f 4180 	mov.w	r1, #16384	; 0x4000
  8000504:	4803      	ldr	r0, [pc, #12]	; (8000514 <main+0x50>)
  8000506:	f001 fb41 	bl	8001b8c <HAL_GPIO_TogglePin>
-	  HAL_Delay (100);   /* Insert delay 100 ms *
+	  HAL_Delay (100); 
  800050a:	2064      	movs	r0, #100	; 0x64
  800050c:	f000 ff3a 	bl	8001384 <HAL_Delay>
 	  HAL_GPIO_TogglePin (GPIOB, GPIO_PIN_14);
