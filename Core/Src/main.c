@@ -93,9 +93,6 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 
-  HAL_GPIO_TogglePin (GPIOB, GPIO_PIN_14);
-  HAL_Delay (100);
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -125,7 +122,11 @@ int main(void)
     /* USER CODE END WHILE */
 
 	  HAL_GPIO_TogglePin (GPIOB, GPIO_PIN_14);
-	  HAL_Delay (100); 
+	  HAL_Delay (100);
+
+	  uint8_t Test[] = "Hello World !!!\r\n"; //Data to send
+	  HAL_UART_Transmit(&huart1,Test,sizeof(Test),10);// Sending in normal mode
+	  HAL_Delay(100);
 
     /* USER CODE BEGIN 3 */
   }
